@@ -1,7 +1,7 @@
 # src/graph.py 
 
 from langgraph.graph import StateGraph, END
-from .nodes import State, analyze_query, retrieve_em, detect_accession_numbers
+from nodes import State, analyze_query, retrieve_em, detect_accession_numbers
 
 def build_llm_graph(llm, prompt):
     graph = StateGraph(State)
