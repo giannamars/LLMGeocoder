@@ -126,5 +126,29 @@
   "East Asia & Pacific, Thailand, Thailand": [
     null,
     null
+  ],
+  "Ho Chi Minh City, Ho Chi Minh City, Vietnam": [
+    10.7793648,
+    106.6922806
+  ],
+  "India": [
+    22.3511148,
+    78.6677428
+  ],
+  "Queensland, Australia": [
+    -22.1646782,
+    144.5844903
+  ],
+  "Delhi, Delhi, India": [
+    28.6138954,
+    77.2090057
+  ],
+  "Kota, Rajasthan, India": [
+    25.1737019,
+    75.8574194
+  ],
+  "Northeast Thailand, Thailand": [
+    16.8330688,
+    102.8434926
   ]
 }
