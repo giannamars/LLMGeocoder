@@ -18,8 +18,8 @@ except ImportError:
             """Fallback exception when LangChain does not provide its own."""
             pass
 
-from .embedding_retrieval import retrieve_top_chunks, build_index
-from .utils import _extract_accessions_from_text
+from embedding_retrieval import retrieve_top_chunks, build_index
+from utils import _extract_accessions_from_text
 
 
 class LocationInfo(BaseModel):
@@ -144,6 +144,13 @@ def _year_from_metadata(meta: Dict[str, Any]) -> Optional[str]:
             return m.group(0)
 
     return None
+
+def analyze_query(state: State) -> State:
+    """
+    Entry‑point node – does nothing but forward the state.
+    In a real world use‑case you could parse a user query here.
+    """
+    return state
 
 
 async def retrieve_em(
