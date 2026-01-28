@@ -36,37 +36,77 @@ def _save_cache() -> None:
 # Query candidate builder
 # ----------------------------------------------------------------------
 def build_geocode_candidates(row: Dict[str, Any]) -> List[str]:
-    """Return query strings ordered from most specific → least specific."""
+    """
+    Return query strings ordered from most specific → least specific,
+    using all available location fields.
+    """
+    # Extract all location fields
     region = row.get("region", "").strip()
     country = row.get("country", "").strip()
-    loc = row.get("location_name", "").strip()
+    location_name = row.get("location_name", "").strip()
+    amenity = row.get("amenity", "").strip()
+    street = row.get("street", "").strip()
+    city = row.get("city", "").strip()
+    county = row.get("county", "").strip()
+    state = row.get("state", "").strip()
+    postalcode = row.get("postalcode", "").strip()
+
+    # Filter out "unknown" values
+    def _clean(val: str) -> str:
+        return "" if val.lower() == "unknown" else val
+
+    region = _clean(region)
+    country = _clean(country)
+    location_name = _clean(location_name)
+    amenity = _clean(amenity)
+    street = _clean(street)
+    city = _clean(city)
+    county = _clean(county)
+    state = _clean(state)
+    postalcode = _clean(postalcode)
 
     def _join(parts: List[str]) -> str:
         return ", ".join(p for p in parts if p)
 
     candidates: List[str] = []
 
-    # Full string
-    candidates.append(_join([region, country, loc]))
+    # 1. Most specific: street + city + state + country
+    candidates.append(_join([street, city, state, country]))
 
-    # Progressively shorten location name
-    if loc:
-        tokens = loc.split()
-        for n in range(len(tokens) - 1, 0, -1):
-            shortened = " ".join(tokens[:n])
-            candidates.append(_join([region, country, shortened]))
+    # 2. Amenity + city + country (e.g., "Vinmec International Hospital, Ho Chi Minh City, Vietnam")
+    candidates.append(_join([amenity, location_name, city, country]))
 
-    # Region + country only
-    candidates.append(_join([region, country]))
+    # 3. Location name + city + country
+    candidates.append(_join([location_name, city, country]))
 
-    # Country only
+    # 4. Location name + country
+    candidates.append(_join([location_name, country]))
+
+    # 5. City + state + country
+    candidates.append(_join([city, state, country]))
+
+    # 6. City + country
+    candidates.append(_join([city, country]))
+
+    # 7. County + state + country
+    candidates.append(_join([county, state, country]))
+
+    # 8. State + country
+    candidates.append(_join([state, country]))
+
+    # 9. Postalcode + country (if available)
+    if postalcode:
+        candidates.append(_join([postalcode, country]))
+
+    # 10. Country only
     candidates.append(country)
+
+    # 11. Original format with region (fallback)
+    candidates.append(_join([region, country, location_name]))
 
     # Deduplicate while preserving order
     seen = set()
     return [q for q in candidates if q and not (q in seen or seen.add(q))]
-
-
 # ----------------------------------------------------------------------
 # Core blocking geocode function
 # ----------------------------------------------------------------------
