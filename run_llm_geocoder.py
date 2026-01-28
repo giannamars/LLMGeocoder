@@ -1,9 +1,203 @@
-import os
-import getpass
+# run_llm_geocoder.py
 
-from cborg_loader import init_cborg_chat_model
-from pubmed_loader import RobustPubMedLoader
+import asyncio
+import argparse
+import getpass
+import logging
+import os
+import sys
+import time
+from typing import List, Dict, Any
+
+import certifi
+os.environ["SSL_CERT_FILE"] = certifi.where()
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+from dotenv import load_dotenv
+from langchain.prompts import PromptTemplate
 
 from config import PROCESSED_PMIDS_FILE
+from cborg_loader import init_cborg_chat_model
+from pubmed_loader import RobustPubMedLoader
+from src.llm_graph import build_llm_graph
+from src.llm_nodes import parser as output_parser  # renamed to avoid collision
+from utils import explode_locations, load_processed_data, save_processed_data, dedupe_and_limit_rows
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+
+# ----------------------------------------------------------------------
+# Toggle geocoding on/off
+# ----------------------------------------------------------------------
+GEOCODE = False
+
+if GEOCODE:
+    from geocode_utils import add_geocode_columns as enrich_geocode
+else:
+    from geocode_utils import noop_geocode as enrich_geocode
 
 
+# ----------------------------------------------------------------------
+# Prompt
+# ----------------------------------------------------------------------
+PROMPT = """..."""  # (kept the same, truncated for brevity)
+
+prompt_template = PromptTemplate(
+    template=PROMPT,
+    input_variables=["full_document"],
+    partial_variables={"format_instructions": output_parser.get_format_instructions()},
+)
+
+# ----------------------------------------------------------------------
+# CONFIGURATION
+# ----------------------------------------------------------------------
+BATCH_SIZE = 1
+MAX_DOCS = 1
+
+
+def make_loader(cumulative_target: int) -> RobustPubMedLoader:
+    return RobustPubMedLoader(
+        query="melioidosis OR pseudomallei",
+        max_docs=cumulative_target,
+        fetch_full_text=True,
+        processed_pmids_file=str(PROCESSED_PMIDS_FILE),
+    )
+
+async def process_one_doc(doc, graph) -> List[Dict[str, Any]]:
+    """Returns a list of result rows – one per location occurrence."""
+    pmid = doc.metadata["pmid"]
+    logging.info(f"Processing PMID {pmid}")
+
+    state = {
+        "pmid": pmid,
+        "full_document": doc.page_content,
+        "doc_metadata": doc.metadata,
+    }
+
+    out = await graph.ainvoke(state)
+    answer = out.get("answer", {})
+    accession_list = out.get("accession_numbers", [])
+
+    base_result = {
+        "pmid": pmid,
+        "title": doc.metadata.get("title"),
+        "study_type": answer.get("study_type"),
+        "sample_date": answer.get("sample_date"),
+        "retrieved_preview": doc.page_content[:500],
+        "source": doc.metadata.get("source"),
+        "location": answer.get("location", []),
+        "accession_numbers": accession_list,
+    }
+
+    return explode_locations(base_result)
+
+async def main(llm) -> None:
+    """Main async pipeline."""
+    graph = build_llm_graph(llm, prompt_template)
+    
+    processed_data = load_processed_data()
+    total_processed = len(processed_data["pmids"])
+    sem = asyncio.Semaphore(BATCH_SIZE)
+
+    async def _process_one_doc_sema(doc):
+        async with sem:
+            try:
+                return await process_one_doc(doc, graph)
+            except Exception as exc:
+                logging.error(f"Failed on PMID {doc.metadata['pmid']}: {exc}")
+                return []
+
+    batch_index = 0
+    while total_processed < MAX_DOCS:
+        remaining = MAX_DOCS - total_processed
+        request_size = min(BATCH_SIZE, remaining)
+        cumulative_target = total_processed + request_size
+
+        loader = make_loader(cumulative_target)
+        batch_docs = loader.load() or []
+        if not batch_docs:
+            logging.info("No more PubMed records to fetch – exiting.")
+            break
+
+        new_docs = [
+            d for d in batch_docs if d.metadata["pmid"] not in processed_data["pmids"]
+        ]
+        if not new_docs:
+            continue
+
+        batch_index += 1
+        logging.info(
+            f"=== Processing batch {batch_index} ({len(new_docs)} new docs, "
+            f"total processed so far: {total_processed})"
+        )
+
+        tasks = [_process_one_doc_sema(doc) for doc in new_docs]
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        rows: List[Dict[str, Any]] = []
+        for res in batch_results:
+            if isinstance(res, Exception):
+                continue
+            rows.extend(res)
+
+        rows = await enrich_geocode(rows)
+        rows = dedupe_and_limit_rows(rows)
+
+        if not rows:
+            logging.info(f"Batch {batch_index} produced no rows – continuing.")
+            continue
+
+        processed_data["pmids"].update(r["pmid"] for r in rows if "pmid" in r)
+        processed_data["results"].extend(rows)
+        save_processed_data(processed_data)
+
+        total_processed = len(processed_data["pmids"])
+        logging.info(
+            f"Batch {batch_index} finished – added {len(rows)} rows "
+            f"(total rows stored: {len(processed_data['results'])})"
+        )
+
+        if total_processed >= MAX_DOCS:
+            logging.info(f"Reached target of {MAX_DOCS} – stopping.")
+            break
+
+    logging.info("=== ALL DONE ===")
+
+if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser(  # renamed from 'parser'
+        description="Run the llm_geocoder pipeline."
+    )
+    arg_parser.add_argument("--model", type=str, default=os.getenv("CBORG_MODEL", "openai/gpt-4o"))
+    arg_parser.add_argument("--temperature", type=float, default=float(os.getenv("CBORG_TEMPERATURE", "0.0")))
+    arg_parser.add_argument("--api-key", type=str, default=os.getenv("CBORG_API_KEY"))
+    arg_parser.add_argument("--base-url", type=str, default=os.getenv("CBORG_BASE_URL", "https://api.cborg.lbl.gov/v1"))
+    arg_parser.add_argument("--max-tokens", type=int, default=None)
+    arg_parser.add_argument("--top-p", type=float, default=None)
+    
+    args = arg_parser.parse_args()
+
+    if not args.api_key:
+        args.api_key = getpass.getpass("Enter your CBorg API key: ")
+
+    llm = init_cborg_chat_model(
+        model=args.model,
+        temperature=args.temperature,
+        api_key=args.api_key,
+        base_url=args.base_url,
+        max_tokens=args.max_tokens,
+        top_p=args.top_p,
+    )
+
+    start_time = time.time()
+    try:
+        asyncio.run(main(llm))
+    except Exception:
+        logging.exception("Fatal error in run_pipeline")
+        sys.exit(1)
+    finally:
+        logging.info(f"=== PIPELINE FINISHED in {time.time() - start_time:.2f} seconds ===")
