@@ -17,8 +17,9 @@ VECTORSTORE_ROOT = Path("./vectorstores")
 VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
 
 _QUERY = (
-    "extract study type, sample date, location – "
-    "which parts of the document contain these facts?"
+    "Burkholderia pseudomallei melioidosis case patient hospital clinic admitted diagnosed treated location country "
+    "environmental farm soil water sample collected site coordinates"
+    "collected year date study city province district region"
 )
 
 DEFAULT_TOP_K = 3
