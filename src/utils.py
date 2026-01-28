@@ -12,33 +12,60 @@ from src.config import PROCESSED_PMIDS_FILE
 
 
 # ----------------------------------------------------------------------
-# Accession number extraction patterns
+# Accession number extraction patterns (categorized)
 # ----------------------------------------------------------------------
-_ACCESSION_PATTERNS = [
-    re.compile(r"\b(?:PRJNA|PRJD)[0-9]+\b", re.IGNORECASE),       # Bioproject
-    re.compile(r"\bSAMN[0-9]+\b", re.IGNORECASE),                  # Biosample
-    re.compile(r"\bNC_[A-Za-z0-9]+\b", re.IGNORECASE),             # GenBank
-    re.compile(r"\b(?:GenBank|RefSeq)\s*accession[s]?\s*[A-Za-z0-9]+\b", re.IGNORECASE),
-    re.compile(r"\bGCA_[A-Za-z0-9\.]+\b", re.IGNORECASE),          # GCA assembly
-    re.compile(r"\bGCF_[A-Za-z0-9\.]+\b", re.IGNORECASE),          # GCF assembly
-]
+_ACCESSION_CATEGORIES = {
+    "bioproject": re.compile(r"\bPRJ[A-Z]{2}[0-9]+\b"),
+    "biosample": re.compile(r"\bSAM[A-Z]{1,2}[0-9]+\b"),
+    "sra": re.compile(r"\b[SED]R[RSXP][0-9]{6,9}\b"),
+    "genbank": re.compile(r"\b[A-Z]{1,2}[0-9]{5,8}\b"),
+    "refseq": re.compile(r"\b(?:NC|NZ|NW)_[A-Z0-9\.]+\b"),
+    "assembly": re.compile(r"\bGC[AF]_[0-9]{9}(?:\.[0-9]+)?\b"),
+    "ena": re.compile(r"\bER[RSXP][0-9]{6,9}\b"),
+    "ddbj": re.compile(r"\bDR[RSXP][0-9]{6,9}\b"),
+    "uniprot": re.compile(r"\b[OPQ][0-9][A-Z0-9]{3}[0-9]\b"),
+    "gisaid": re.compile(r"\bEPI_ISL_[0-9]+\b"),
+    "wgs": re.compile(r"\b[A-Z]{4}[0-9]{8,10}\b"),
+}
+
+
+def _extract_accessions_categorized(text: str) -> Dict[str, List[str]]:
+    """
+    Extract accessions and categorize by database.
+    Returns dict with database names as keys and lists of accessions as values.
+    """
+    if not isinstance(text, str):
+        return {}
+    
+    result = {}
+    for name, pattern in _ACCESSION_CATEGORIES.items():
+        matches = pattern.findall(text)
+        # Deduplicate while preserving order
+        seen = set()
+        unique = [m for m in matches if not (m in seen or seen.add(m))]
+        # Filter short matches (likely false positives)
+        unique = [m for m in unique if len(m) >= 6]
+        if unique:
+            result[name] = unique
+    
+    return result
 
 
 def _extract_accessions_from_text(text: str) -> List[str]:
     """
     Scan text for genome-related accession identifiers.
-    Returns deduplicated list preserving order.
+    Returns deduplicated flat list preserving order.
     """
-    if not isinstance(text, str):
-        return []
-
-    matches = []
-    for pattern in _ACCESSION_PATTERNS:
-        matches.extend(pattern.findall(text))
-
-    # Deduplicate while preserving order
+    categorized = _extract_accessions_categorized(text)
+    # Flatten all categories into a single list
+    all_accessions = []
     seen = set()
-    return [m for m in matches if not (m in seen or seen.add(m))]
+    for accessions in categorized.values():
+        for acc in accessions:
+            if acc not in seen:
+                seen.add(acc)
+                all_accessions.append(acc)
+    return all_accessions
 
 
 def extract_genome_accession_numbers(text: str) -> Optional[str]:
@@ -222,34 +249,36 @@ def sanitize_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
 def explode_locations(record: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Flatten location list into one row per location."""
     locations = record.get("location")
-    accession_list = record.get("accession_numbers")
-
+    
     if not isinstance(locations, list) or not locations:
         return []
+
+    # Fields to copy to each exploded row
+    common_fields = [
+        "pmid", "title", "study_type", "sample_date", "source",
+        "retrieved_preview", "accession_numbers",
+        "acc_bioproject", "acc_biosample", "acc_sra", "acc_genbank",
+        "acc_refseq", "acc_assembly", "acc_ena", "acc_ddbj",
+        "acc_uniprot", "acc_gisaid", "acc_wgs",
+    ]
 
     exploded: List[Dict[str, Any]] = []
 
     for loc in locations:
-        # IMPORTANT: Use deep copy to avoid shared references
-        new_rec = {
-            "pmid": record.get("pmid"),
-            "title": record.get("title"),
-            "study_type": record.get("study_type"),
-            "sample_date": record.get("sample_date"),
-            "source": record.get("source"),
-            "retrieved_preview": record.get("retrieved_preview"),
-            "region": loc.get("region", "unknown"),
-            "country": loc.get("country", "unknown"),
-            "location_name": loc.get("location", "unknown"),
-            "amenity": loc.get("amenity", "unknown"),
-            "street": loc.get("street", "unknown"),
-            "city": loc.get("city", "unknown"),
-            "county": loc.get("county", "unknown"),
-            "state": loc.get("state", "unknown"),
-            "postalcode": loc.get("postalcode", "unknown"),
-            "accession_numbers": accession_list,
-            "location": record.get("location"),  # Keep original for reference
-        }
+        new_rec = {field: record.get(field) for field in common_fields}
+        
+        # Location-specific fields
+        new_rec["region"] = loc.get("region", "unknown")
+        new_rec["country"] = loc.get("country", "unknown")
+        new_rec["location_name"] = loc.get("location", "unknown")
+        new_rec["amenity"] = loc.get("amenity", "unknown")
+        new_rec["street"] = loc.get("street", "unknown")
+        new_rec["city"] = loc.get("city", "unknown")
+        new_rec["county"] = loc.get("county", "unknown")
+        new_rec["state"] = loc.get("state", "unknown")
+        new_rec["postalcode"] = loc.get("postalcode", "unknown")
+        new_rec["location"] = record.get("location")  # Keep original list
+        
         exploded.append(new_rec)
 
     return exploded
@@ -285,7 +314,7 @@ MAX_ROWS_PER_PMID: Optional[int] = None
 
 def dedupe_and_limit_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Remove duplicate locations per PMID and optionally limit row count."""
-    logging.info(f"Dedupe input: {len(rows)} rows")
+    #logging.info(f"Dedupe input: {len(rows)} rows")
 
     grouped: Dict[str, List[Dict[str, Any]]] = {}
     for r in rows:
@@ -313,6 +342,6 @@ def dedupe_and_limit_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             uniq = uniq[:MAX_ROWS_PER_PMID]
 
         cleaned.extend(uniq)
-    logging.info(f"Dedupe output: {len(cleaned)} rows")
+    #logging.info(f"Dedupe output: {len(cleaned)} rows")
 
     return cleaned

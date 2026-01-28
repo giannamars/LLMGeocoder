@@ -143,8 +143,9 @@ prompt_template = PromptTemplate(
 # ----------------------------------------------------------------------
 # CONFIGURATION
 # ----------------------------------------------------------------------
-BATCH_SIZE = 1
-MAX_DOCS = 1
+BATCH_SIZE = 10
+MAX_DOCS = 200
+MAX_CONCURRENT = 2      # Max concurrent LLM requests (to avoid rate limits)
 
 
 def make_loader(cumulative_target: int) -> RobustPubMedLoader:
@@ -156,7 +157,6 @@ def make_loader(cumulative_target: int) -> RobustPubMedLoader:
     )
 
 async def process_one_doc(doc, graph) -> List[Dict[str, Any]]:
-    """Returns a list of result rows – one per location occurrence."""
     pmid = doc.metadata["pmid"]
     logging.info(f"Processing PMID {pmid}")
 
@@ -168,12 +168,8 @@ async def process_one_doc(doc, graph) -> List[Dict[str, Any]]:
 
     out = await graph.ainvoke(state)
     answer = out.get("answer", {})
-    # Skip excluded studies
-    if answer.get("study_type") == "Excluded":
-        logging.info(f"PMID {pmid}: Excluded (lab study or ineligible)")
-        return []  # No rows for this document
-    
     accession_list = out.get("accession_numbers", [])
+    accession_categories = out.get("accession_categories", {})  # Add this
 
     base_result = {
         "pmid": pmid,
@@ -184,6 +180,18 @@ async def process_one_doc(doc, graph) -> List[Dict[str, Any]]:
         "source": doc.metadata.get("source"),
         "location": answer.get("location", []),
         "accession_numbers": accession_list,
+        # Add individual category columns
+        "acc_bioproject": accession_categories.get("bioproject", []),
+        "acc_biosample": accession_categories.get("biosample", []),
+        "acc_sra": accession_categories.get("sra", []),
+        "acc_genbank": accession_categories.get("genbank", []),
+        "acc_refseq": accession_categories.get("refseq", []),
+        "acc_assembly": accession_categories.get("assembly", []),
+        "acc_ena": accession_categories.get("ena", []),
+        "acc_ddbj": accession_categories.get("ddbj", []),
+        "acc_uniprot": accession_categories.get("uniprot", []),
+        "acc_gisaid": accession_categories.get("gisaid", []),
+        "acc_wgs": accession_categories.get("wgs", []),
     }
 
     return explode_locations(base_result)
@@ -194,7 +202,7 @@ async def main(llm) -> None:
     
     processed_data = load_processed_data()
     total_processed = len(processed_data["pmids"])
-    sem = asyncio.Semaphore(BATCH_SIZE)
+    sem = asyncio.Semaphore(MAX_CONCURRENT)
 
     async def _process_one_doc_sema(doc):
         async with sem:
@@ -238,7 +246,7 @@ async def main(llm) -> None:
             rows.extend(res)
 
         rows = await enrich_geocode(rows)
-        logging.info(f"After geocoding, first row has lat={rows[0].get('latitude') if rows else 'N/A'}")
+        #logging.info(f"After geocoding, first row has lat={rows[0].get('latitude') if rows else 'N/A'}")
 
         rows = dedupe_and_limit_rows(rows)
 

@@ -42,5 +42,561 @@
   "Osogbo, Osogbo, Osun State, Nigeria": [
     7.7551115,
     4.5506394
+  ],
+  "Far North Queensland, Queensland, Australia": [
+    -16.9173782,
+    145.76794
+  ],
+  "Thailand": [
+    14.8971921,
+    100.83273
+  ],
+  "Madhya Pradesh, Madhya Pradesh, India": [
+    22.0490636,
+    80.6928571
+  ],
+  "Amnat Charoen province, Thailand": [
+    15.9949473,
+    104.7328575
+  ],
+  "Vientiane Capital, Vientiane, Laos": [
+    17.9640988,
+    102.6133707
+  ],
+  "Rajasthan, Rajasthan, India": [
+    24.8768151,
+    75.6294284
+  ],
+  "Sivagangai district, Tamil Nadu, India": [
+    9.9650599,
+    78.7204283
+  ],
+  "Cape York, Far North Queensland, Queensland, Australia": [
+    null,
+    null
+  ],
+  "Cape York, Far North Queensland, Australia": [
+    null,
+    null
+  ],
+  "Queensland, Australia": [
+    -22.1646782,
+    144.5844903
+  ],
+  "Townsville, Townsville, Queensland, Australia": [
+    -19.2569391,
+    146.8239537
+  ],
+  "U.S. gulf coast, United States": [
+    null,
+    null
+  ],
+  "United States": [
+    39.7837304,
+    -100.445882
+  ],
+  "Udupi district, Manipal, Karnataka, India": [
+    13.3582896,
+    74.7844493
+  ],
+  "University Medical Center Hamburg-Eppendorf, Hamburg, Germany": [
+    null,
+    null
+  ],
+  "University Medical Center Hamburg-Eppendorf, Germany": [
+    null,
+    null
+  ],
+  "Hamburg, Germany": [
+    53.550341,
+    10.000654
+  ],
+  "Townsville University Hospital, Townsville, Queensland, Australia": [
+    null,
+    null
+  ],
+  "Townsville University Hospital, Townsville, Australia": [
+    null,
+    null
+  ],
+  "Townsville University Hospital, Queensland, Australia": [
+    null,
+    null
+  ],
+  "Townsville University Hospital, Australia": [
+    null,
+    null
+  ],
+  "Townsville, Queensland, Australia": [
+    -19.2569391,
+    146.8239537
+  ],
+  "Royal Darwin Hospital, Darwin, Northern Territory, Australia": [
+    -12.3548594,
+    130.8826678
+  ],
+  "Bologna, Bologna, Italy": [
+    44.4938203,
+    11.3426327
+  ],
+  "Jardin des Plantes, Paris, Paris, France": [
+    48.844036,
+    2.3597321
+  ],
+  "Western India, India": [
+    9.9659267,
+    76.2928134
+  ],
+  "Kalinga Institute of Medical Sciences, Bhubaneswar, India": [
+    20.3533182,
+    85.8144987
+  ],
+  "Seychelles": [
+    -4.6574977,
+    55.4540146
+  ],
+  "Mauritius": [
+    -20.2759451,
+    57.5703566
+  ],
+  "Réunion": [
+    -21.1307379,
+    55.5364801
+  ],
+  "tertiary care center in central India, India": [
+    null,
+    null
+  ],
+  "India": [
+    22.3511148,
+    78.6677428
+  ],
+  "Amala Institute of Medical Sciences, Thrissur, Thrissur, India": [
+    10.561561,
+    76.1668741
+  ],
+  "Velammal Medical College Hospital and Research Institute, Madurai, India": [
+    null,
+    null
+  ],
+  "Velammal Medical College Hospital and Research Institute, India": [
+    null,
+    null
+  ],
+  "Madurai, India": [
+    9.9261153,
+    78.1140983
+  ],
+  "Kasturba Medical College Mangalore, Mangalore, Karnataka, India": [
+    12.870232,
+    74.8441593
+  ],
+  "Germany": [
+    51.1638175,
+    10.4478313
+  ],
+  "National University Hospital, Singapore, Singapore": [
+    1.2942758,
+    103.7830488
+  ],
+  "Gulf Coast region of Mississippi, Mississippi, United States": [
+    null,
+    null
+  ],
+  "Gulf Coast region of Mississippi, United States": [
+    null,
+    null
+  ],
+  "Mississippi, United States": [
+    32.9715285,
+    -89.7348497
+  ],
+  "Hsinchu City, Hsinchu City, Taiwan": [
+    24.8198575,
+    121.0272732
+  ],
+  "New Taipei City, New Taipei City, Taiwan": [
+    25.0600269,
+    121.4595689
+  ],
+  "Taipei City, Taipei City, Taiwan": [
+    25.0600269,
+    121.4595689
+  ],
+  "southern Taiwan, Taiwan": [
+    23.0962556,
+    120.287041
+  ],
+  "eastern Taiwan, Taiwan": [
+    23.9924196,
+    121.5994087
+  ],
+  "Koutiala, Koutiala, Mali": [
+    12.3854826,
+    -5.4689427
+  ],
+  "Chongqing, Chongqing, China": [
+    29.5515144,
+    106.5415811
+  ],
+  "Cluster zone, GIS-defined grid squares 31-33, Taiwan": [
+    null,
+    null
+  ],
+  "Taiwan": [
+    23.9739374,
+    120.9820179
+  ],
+  "Cairns Hospital, Cairns, Queensland, Australia": [
+    -16.9122515,
+    145.7682767
+  ],
+  "La Foa, La Foa, New Caledonia": [
+    -21.7130647,
+    165.8079609
+  ],
+  "Sri Manakula Vinayagar Medical College and Hospital, Puducherry, Puducherry, India": [
+    null,
+    null
+  ],
+  "Sri Manakula Vinayagar Medical College and Hospital, Puducherry, India": [
+    null,
+    null
+  ],
+  "Sri Manakula Vinayagar Medical College and Hospital, India": [
+    null,
+    null
+  ],
+  "Puducherry, Puducherry, India": [
+    11.9340568,
+    79.8306447
+  ],
+  "Paramaribo, Paramaribo, Suriname": [
+    5.8241764,
+    -55.1662813
+  ],
+  "Commewijne, Suriname": [
+    5.8401198,
+    -54.9244431
+  ],
+  "Nickerie, Suriname": [
+    5.7183925,
+    -56.8775105
+  ],
+  "Gulf Coast region of southern Mississippi, Mississippi, United States": [
+    null,
+    null
+  ],
+  "Gulf Coast region of southern Mississippi, United States": [
+    null,
+    null
+  ],
+  "Second Affiliated Hospital of Hainan Medical University, Hainan, China": [
+    null,
+    null
+  ],
+  "Second Affiliated Hospital of Hainan Medical University, China": [
+    null,
+    null
+  ],
+  "Hainan, China": [
+    19.2000001,
+    109.5999999
+  ],
+  "Amala Institute of Medical Sciences, Thrissur, Kerala, India": [
+    10.561561,
+    76.1668741
+  ],
+  "Kasturba Hospital, Manipal, Manipal, Karnataka, India": [
+    13.3538104,
+    74.7900929
+  ],
+  "Chittagong, Chittagong, Bangladesh": [
+    22.333778,
+    91.8344348
+  ],
+  "Dhaka, Dhaka, Bangladesh": [
+    23.7643863,
+    90.3890144
+  ],
+  "Habiganj, Habiganj, Bangladesh": [
+    24.3746027,
+    91.4140272
+  ],
+  "Mymensingh, Mymensingh, Bangladesh": [
+    24.7482129,
+    90.4099158
+  ],
+  "Narsingdi, Narsingdi, Bangladesh": [
+    23.9185928,
+    90.6928096
+  ],
+  "Sylhet, Sylhet, Bangladesh": [
+    24.89922,
+    91.8685271
+  ],
+  "Gazipur district, Bangladesh": [
+    24.093015,
+    90.4104183
+  ],
+  "Sarawak, Malaysia": [
+    2.5023855,
+    112.9547283
+  ],
+  "Jaipur, Jaipur, Rajasthan, India": [
+    26.9154576,
+    75.8189817
+  ],
+  "Mississippi Gulf Coast County, Mississippi, United States of America": [
+    30.3946084,
+    -88.6456263
+  ],
+  "Texas, Texas, United States of America": [
+    30.6108618,
+    -96.3520606
+  ],
+  "Mangalore, Mangalore, Karnataka, India": [
+    12.9546178,
+    74.8847182
+  ],
+  "Mahosot Hospital, Vientiane, Laos": [
+    17.9602375,
+    102.611754
+  ],
+  "Georgia, Georgia, United States": [
+    33.9404278,
+    -83.373049
+  ],
+  "northern India, India": [
+    28.660958,
+    77.2957871
+  ],
+  "Lok Nayak Hospital, New Delhi, India": [
+    null,
+    null
+  ],
+  "Lok Nayak Hospital, India": [
+    28.6388085,
+    77.2386726
+  ],
+  "Jawaharlal Institute of Postgraduate Medical Education and Research, Puducherry, Puducherry, India": [
+    null,
+    null
+  ],
+  "Jawaharlal Institute of Postgraduate Medical Education and Research, Puducherry, India": [
+    null,
+    null
+  ],
+  "Jawaharlal Institute of Postgraduate Medical Education and Research, India": [
+    null,
+    null
+  ],
+  "city center zoo, Hong Kong, Hong Kong, China": [
+    null,
+    null
+  ],
+  "city center zoo, Hong Kong, China": [
+    null,
+    null
+  ],
+  "Hong Kong, China": [
+    22.3492155,
+    114.1857978
+  ],
+  "Northeast Thailand, Thailand": [
+    16.8330688,
+    102.8434926
+  ],
+  "Southern Queensland, Queensland, Australia": [
+    -28.2162236,
+    152.0418849
+  ],
+  "Mississippi, Mississippi, United States of America": [
+    34.3646125,
+    -89.5396349
+  ],
+  "Nghe An, Vietnam": [
+    19.1976001,
+    105.060676
+  ],
+  "Ha Tinh, Vietnam": [
+    18.3504832,
+    105.7623047
+  ],
+  "Thanh Hoa, Vietnam": [
+    19.9781573,
+    105.4816107
+  ],
+  "Pinghu, Pinghu, Zhejiang, China": [
+    30.7052147,
+    121.0009766
+  ],
+  "Hulu Perdik, Selangor, Malaysia": [
+    null,
+    null
+  ],
+  "Hulu Perdik, Malaysia": [
+    null,
+    null
+  ],
+  "Selangor, Malaysia": [
+    3.2083304,
+    101.304146
+  ],
+  "Sungai Lopo, Selangor, Malaysia": [
+    3.2328943,
+    101.8615362
+  ],
+  "Sungai Congkak, Selangor, Malaysia": [
+    3.2309308,
+    101.8386285
+  ],
+  "Gunung Nuang, Selangor, Malaysia": [
+    3.0947723,
+    101.5038002
+  ],
+  "Haikou, Haikou, Hainan, China": [
+    19.9963163,
+    110.2457558
+  ],
+  "Sham Shui Po, Hong Kong": [
+    22.329757,
+    114.160851
+  ],
+  "Eastern, Hong Kong": [
+    22.2730777,
+    114.2335938
+  ],
+  "Kowloon City, Hong Kong": [
+    22.3301595,
+    114.1899368
+  ],
+  "northeast Thailand, Thailand": [
+    16.8330688,
+    102.8434926
+  ],
+  "Philippines": [
+    12.7503486,
+    122.7312101
+  ],
+  "Odisha, Odisha, India": [
+    20.2558788,
+    85.8411761
+  ],
+  "Darwin, Darwin, Northern Territory, Australia": [
+    -12.4729475,
+    130.9040298
+  ],
+  "Hospital Kuala Lumpur, Kuala Lumpur, Malaysia": [
+    3.1737327,
+    101.7020077
+  ],
+  "Kaohsiung, Kaohsiung, Taiwan": [
+    22.639838,
+    120.3025796
+  ],
+  "Mississippi, Mississippi, United States": [
+    34.3646125,
+    -89.5396349
+  ],
+  "Texas, Texas, United States": [
+    30.6108618,
+    -96.3520606
+  ],
+  "Turgutlu State Hospital, Manisa, Türkiye": [
+    null,
+    null
+  ],
+  "Turgutlu State Hospital, Türkiye": [
+    null,
+    null
+  ],
+  "Manisa, Türkiye": [
+    38.8574402,
+    28.0565711
+  ],
+  "Ubon Ratchathani, Ubon Ratchathani, Thailand": [
+    15.2274235,
+    104.8589462
+  ],
+  "Buri Ram, Buri Ram, Thailand": [
+    14.9955693,
+    103.1079187
+  ],
+  "Chaiyaphum, Chaiyaphum, Thailand": [
+    15.8068082,
+    102.0315003
+  ],
+  "Nakhon Ratchasima, Nakhon Ratchasima, Thailand": [
+    14.9747339,
+    102.0981161
+  ],
+  "Nong Khai, Nong Khai, Thailand": [
+    17.8825057,
+    102.7482277
+  ],
+  "Khon Kaen, Khon Kaen, Thailand": [
+    16.4303916,
+    102.8355904
+  ],
+  "Miri Hospital, Miri, Malaysia": [
+    4.3763923,
+    114.0025618
+  ],
+  "major city in the middle region of Vietnam, Vietnam": [
+    null,
+    null
+  ],
+  "Vietnam": [
+    15.9266657,
+    107.9650855
+  ],
+  "Chaophraya Abhaibhubejhr hospital, Prachinburi, Thailand": [
+    null,
+    null
+  ],
+  "Chaophraya Abhaibhubejhr hospital, Thailand": [
+    null,
+    null
+  ],
+  "Prachinburi, Thailand": [
+    14.1542055,
+    101.5547823
+  ],
+  "Queensland, Queensland, Australia": [
+    -27.497418,
+    153.0131666
+  ],
+  "Dental clinic, Tamil Nadu, India": [
+    12.6234435,
+    80.1482953
+  ],
+  "Northern Territory, Northern Territory, Australia": [
+    -15.6034154,
+    133.2169018
+  ],
+  "Base Hospital Teldeniya, Teldeniya, Sri Lanka": [
+    null,
+    null
+  ],
+  "Base Hospital Teldeniya, Sri Lanka": [
+    7.3077388,
+    80.7644417
+  ],
+  "Rice field, Khon Kaen, Thailand": [
+    null,
+    null
+  ],
+  "Rice field, Thailand": [
+    null,
+    null
+  ],
+  "Khon Kaen, Thailand": [
+    16.6022387,
+    102.6352933
+  ],
+  "Mukdahan, Thailand": [
+    16.6972385,
+    104.3470293
   ]
 }

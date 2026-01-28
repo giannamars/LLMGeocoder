@@ -1,4 +1,5 @@
 # src/simple_nodes.py
+import asyncio
 import logging
 import re
 from typing import List, Optional, TypedDict, Dict, Any
@@ -15,37 +16,27 @@ except ImportError:
         from langchain.output_parsers import OutputParserException
     except ImportError:
         class OutputParserException(Exception):
-            """Fallback exception when LangChain does not provide its own."""
             pass
 
-from embedding_retrieval import retrieve_top_chunks, build_index
-from utils import _extract_accessions_from_text
+from .embedding_retrieval import retrieve_top_chunks, build_index
+from .utils import _extract_accessions_from_text, _extract_accessions_categorized
 
 
 class LocationInfo(BaseModel):
     """One occurrence of a melioidosis case / environmental detection."""
     
     region: str = Field(description="Geographic region or 'unknown'.")
-    country: str = Field(description="Full country name, e.g. 'Thailand' or 'unknown'.")
-    location: str = Field(
-        description="Specific place (city, district, hospital, GPS coordinate, …) or 'unknown'"
-    )
-    amenity: str = Field(
-        default="unknown",
-        description="Type of point-of-interest (e.g. 'Hospital', 'Farm') or 'unknown'."
-    )
-    street: str = Field(
-        default="unknown",
-        description="House number + street name or lat/lon pair, or 'unknown'.",
-    )
-    city: str = Field(default="unknown", description="City or town name (or 'unknown').")
-    county: str = Field(default="unknown", description="County/district (or 'unknown').")
-    state: str = Field(default="unknown", description="State/province/region (or 'unknown').")
-    postalcode: str = Field(default="unknown", description="Postal/ZIP code (or 'unknown').")
+    country: str = Field(description="Full country name or 'unknown'.")
+    location: str = Field(description="Specific place or 'unknown'")
+    amenity: str = Field(default="unknown")
+    street: str = Field(default="unknown")
+    city: str = Field(default="unknown")
+    county: str = Field(default="unknown")
+    state: str = Field(default="unknown")
+    postalcode: str = Field(default="unknown")
 
     @root_validator(pre=True)
     def _fill_unknown(cls, values):
-        """Normalise empty strings to 'unknown'."""
         all_keys = ("region", "country", "location", "amenity", "street", "city", "county", "state", "postalcode")
         for key in all_keys:
             if not values.get(key):
@@ -60,16 +51,17 @@ class State(TypedDict, total=False):
     answer: Dict[str, Any]
     retrieved_text: Optional[str]
     accession_numbers: Optional[List[str]]
+    accession_categories: Optional[Dict[str, List[str]]]
 
 
 class StudyInfo(BaseModel):
+    """The top-level JSON object that the LLM must return."""
+    
     study_type: str = Field(
         description='One of "Human cases", "Animal cases", "Environmental cases", "Excluded", or "unknown"'
     )
-    sample_date: str = Field(description="Four-digit year of occurrence, or 'unknown'")
-    location: List[LocationInfo] = Field(
-        description="One or more occurrence objects"
-    )
+    sample_date: str = Field(description="Four-digit year or 'unknown'")
+    location: List[LocationInfo] = Field(description="One or more occurrence objects")
 
     @validator("study_type")
     def _check_study_type(cls, v: str) -> str:
@@ -80,24 +72,16 @@ class StudyInfo(BaseModel):
 
     @validator("sample_date", pre=True)
     def _normalize_sample_date(cls, v) -> str:
-        """Normalize empty/null values to 'unknown', validate year format."""
-        # Handle empty, null, or whitespace
         if not v or (isinstance(v, str) and not v.strip()):
             return "unknown"
-        
         v = str(v).strip()
-        
         if v.lower() == "unknown":
             return "unknown"
-        
-        # Check for valid 4-digit year
         if not re.fullmatch(r"\d{4}", v):
-            # Try to extract a year from the string
             match = re.search(r"\b(19|20)\d{2}\b", v)
             if match:
                 return match.group(0)
             return "unknown"
-        
         return v
 
 
@@ -109,40 +93,61 @@ async def _call_llm(
     prompt: PromptTemplate,
     doc_text: str,
     pmid: str,
+    max_retry: int = 10,
 ) -> Dict[str, Any]:
-    """Sends the document to the LLM and returns a plain dict."""
+    """
+    Sends the document to the LLM with retry logic.
+    Based on CBorg API recommendations.
+    """
     formatted_prompt = f"PMID: {pmid}\n\n" + prompt.format(full_document=doc_text)
-
-    logging.debug("=== Prompt sent to LLM (first 200 chars) ===")
-    logging.debug(formatted_prompt[:200])
 
     messages = [
         SystemMessage(
             content=(
-            "You are a JSON extraction assistant. "
-            "The user provides scientific document text. "
-            "Extract the requested fields and return ONLY valid JSON. "
-            "Never refuse — the document text is provided directly in the message."
+                "You are a JSON-only API. Output raw JSON with no markdown formatting, "
+                "no code fences, no explanations. Start with { and end with }."
             )
         ),
         HumanMessage(content=formatted_prompt),
     ]
 
-    response = await llm.ainvoke(messages)
+    n = 0
+    while True:
+        n += 1
+        
+        try:
+            response = await llm.ainvoke(messages)
+            
+            # Success - parse the response
+            raw_content = response.content.strip()
 
-    logging.debug("✅ LLM raw response received")
-    logging.debug(f"LLM response content:\n{response.content}")
+            # Strip markdown code fences
+            fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_content)
+            if fence_match:
+                raw_content = fence_match.group(1).strip()
 
-    try:
-        parsed_obj = parser.parse(response.content)
-        return parsed_obj.dict()
-    except OutputParserException as exc:
-        logging.warning(f"⚠️ LLM output could not be parsed: {exc}")
-        return {
-            "study_type": "unknown",
-            "sample_date": "unknown",
-            "location": [],
-        }
+            # Extract JSON object
+            json_match = re.search(r"\{[\s\S]*\}", raw_content)
+            if json_match:
+                raw_content = json_match.group(0)
+
+            try:
+                parsed_obj = parser.parse(raw_content)
+                return parsed_obj.dict()
+            except OutputParserException as exc:
+                logging.warning(f"⚠️ LLM output could not be parsed for PMID {pmid}: {exc}")
+                logging.debug(f"Raw response:\n{response.content[:500]}")
+                return {"study_type": "unknown", "sample_date": "unknown", "location": []}
+
+        except Exception as e:
+            if n < max_retry:
+                wait_time = max(1, n * 5)
+                logging.warning(f"CBORG API ERROR (PMID {pmid}, Attempt {n}/{max_retry}): {e}")
+                logging.info(f"Retrying in {wait_time} seconds...")
+                await asyncio.sleep(wait_time)
+            else:
+                logging.error(f"CBORG API FAILED after {max_retry} attempts for PMID {pmid}: {e}")
+                return {"study_type": "unknown", "sample_date": "unknown", "location": []}
 
 
 def _year_from_metadata(meta: Dict[str, Any]) -> Optional[str]:
@@ -150,21 +155,12 @@ def _year_from_metadata(meta: Dict[str, Any]) -> Optional[str]:
     year = meta.get("year")
     if isinstance(year, str) and year.isdigit() and len(year) == 4:
         return year
-
     raw = meta.get("pub_date")
     if isinstance(raw, str):
         m = re.search(r"\b(19|20)\d{2}\b", raw)
         if m:
             return m.group(0)
-
     return None
-
-def analyze_query(state: State) -> State:
-    """
-    Entry‑point node – does nothing but forward the state.
-    In a real world use‑case you could parse a user query here.
-    """
-    return state
 
 
 async def retrieve_em(
@@ -186,13 +182,11 @@ async def retrieve_em(
         }
         return new_state
 
-    # Short-text shortcut
-    if len(full_text) <= 4_000:
+    # Use full text for shorter documents, embeddings for longer
+    if len(full_text) <= 5000:
         text_for_llm = full_text
     else:
-        # Long-text path – use vector store
         excerpt = retrieve_top_chunks(pmid, top_k=5)
-
         if excerpt is None:
             logging.info(f"Building vector store for PMID {pmid} (first use).")
             success = build_index(pmid, full_text)
@@ -200,7 +194,7 @@ async def retrieve_em(
                 logging.error(f"Failed to build vector store for PMID {pmid}; using full text.")
                 text_for_llm = full_text
             else:
-                excerpt = retrieve_top_chunks(pmid, top_k=3)
+                excerpt = retrieve_top_chunks(pmid, top_k=5)
                 text_for_llm = excerpt if excerpt else full_text
         else:
             text_for_llm = excerpt
@@ -216,12 +210,10 @@ async def retrieve_em(
 
     if cleaned_year:
         parsed["sample_date"] = cleaned_year
-        logging.debug(f"PMID {pmid}: using LLM-provided year {cleaned_year}")
     else:
         meta = state.get("doc_metadata", {})
         meta_year = _year_from_metadata(meta)
         parsed["sample_date"] = meta_year if meta_year else "unknown"
-        logging.debug(f"PMID {pmid}: sample_date from metadata: {parsed['sample_date']}")
 
     new_state = dict(state)
     new_state["answer"] = parsed
@@ -229,7 +221,8 @@ async def retrieve_em(
 
 
 async def detect_accession_numbers(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract accession numbers from the document text."""
+    """Extract accession numbers from the document text (categorized)."""
     raw_text = state.get("full_document", "")
     state["accession_numbers"] = _extract_accessions_from_text(raw_text)
+    state["accession_categories"] = _extract_accessions_categorized(raw_text)
     return state

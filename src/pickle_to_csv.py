@@ -28,7 +28,19 @@ CANONICAL_COLUMNS = [
     "latitude",
     "longitude",
     "geocode_query",
+    # Accession columns
     "accession_numbers",
+    "acc_bioproject",
+    "acc_biosample",
+    "acc_sra",
+    "acc_genbank",
+    "acc_refseq",
+    "acc_assembly",
+    "acc_ena",
+    "acc_ddbj",
+    "acc_uniprot",
+    "acc_gisaid",
+    "acc_wgs",
     "retrieved_preview",
 ]
 
@@ -36,7 +48,7 @@ CANONICAL_COLUMNS = [
 def load_results_as_dataframe(
     pickle_path: Path = PROCESSED_PMIDS_FILE,
 ) -> pd.DataFrame:
-    """Load pickle and return a DataFrame (rows are already exploded)."""
+    """Load pickle and return a DataFrame."""
     
     if not pickle_path.is_file():
         return pd.DataFrame(columns=CANONICAL_COLUMNS)
@@ -48,21 +60,31 @@ def load_results_as_dataframe(
     if not raw_rows:
         return pd.DataFrame(columns=CANONICAL_COLUMNS)
 
-    # Normalize entries to dicts (NO explosion - already done in pipeline)
     rows = [
         entry if isinstance(entry, dict) else entry.__dict__
         for entry in raw_rows
     ]
 
-    # Build DataFrame directly from rows
     df = pd.DataFrame(rows)
 
-    # Reorder columns: canonical first, then extras
+    # Convert list columns to semicolon-separated strings for CSV
+    list_columns = [
+        "accession_numbers", "acc_bioproject", "acc_biosample", "acc_sra",
+        "acc_genbank", "acc_refseq", "acc_assembly", "acc_ena", "acc_ddbj",
+        "acc_uniprot", "acc_gisaid", "acc_wgs",
+    ]
+    for col in list_columns:
+        if col in df.columns:
+            df[col] = df[col].apply(
+                lambda x: "; ".join(x) if isinstance(x, list) else (x or "")
+            )
+
+    # Reorder columns
     existing_canonical = [c for c in CANONICAL_COLUMNS if c in df.columns]
     extra_cols = [c for c in df.columns if c not in CANONICAL_COLUMNS]
     df = df[existing_canonical + extra_cols]
 
-    # Add any missing canonical columns
+    # Add missing columns
     for col in CANONICAL_COLUMNS:
         if col not in df.columns:
             df[col] = pd.NA
