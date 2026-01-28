@@ -1,0 +1,23 @@
+Metadata-Version: 2.4
+Name: LLMGeocoder
+Version: 0.1.0
+Summary: Hybrid LangChain-based RAG pipeline for retrieving geocoordinates of publicly available genomes
+Author-email: "Gianna L. Marschmann" <glmarschmann@lbl.gov>
+License: MIT
+Requires-Python: >=3.9
+Requires-Dist: langchain==0.3.26
+Requires-Dist: langchain-chroma==0.2.4
+Requires-Dist: langchain-huggingface
+Requires-Dist: sentence-transformers==5.0.0
+Requires-Dist: torch==2.7.1
+Requires-Dist: transformers==4.53.2
+Requires-Dist: biopython==1.85
+Requires-Dist: chromadb==1.0.15
+Requires-Dist: geopy==2.4.1
+Requires-Dist: spacy==3.8.7
+Requires-Dist: pandas==2.3.1
+Requires-Dist: numpy==2.3.2
+Requires-Dist: python-dotenv==1.0.1
+Requires-Dist: pydantic==2.11.7
+Provides-Extra: dev
+Requires-Dist: pytest==8.2.2; extra == "dev"

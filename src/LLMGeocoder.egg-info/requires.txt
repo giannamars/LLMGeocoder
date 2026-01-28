@@ -1,0 +1,17 @@
+langchain==0.3.26
+langchain-chroma==0.2.4
+langchain-huggingface
+sentence-transformers==5.0.0
+torch==2.7.1
+transformers==4.53.2
+biopython==1.85
+chromadb==1.0.15
+geopy==2.4.1
+spacy==3.8.7
+pandas==2.3.1
+numpy==2.3.2
+python-dotenv==1.0.1
+pydantic==2.11.7
+
+[dev]
+pytest==8.2.2

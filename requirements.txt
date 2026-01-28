@@ -1,0 +1,53 @@
+# --------------------------------------------------------------
+# Core LangChain packages
+# --------------------------------------------------------------
+langchain==0.3.26
+langchain-chroma==0.2.4      # vector‑store integration (uses ChromaDB under the hood)
+langchain-huggingface==0.3.0  # HuggingFace embeddings wrapper
+langchain-openai==0.3.5      # OpenAI LLM wrapper
+
+# --------------------------------------------------------------
+# Embedding / model back‑ends
+# --------------------------------------------------------------
+sentence-transformers==5.0.0   # used by HuggingFaceEmbeddings
+torch==2.7.1               # PyTorch – required by sentence‑transformers & transformers
+transformers==4.53.2         # HuggingFace model library
+
+# --------------------------------------------------------------
+# Bioinformatics / PubMed utilities
+# --------------------------------------------------------------
+biopython==1.85            # Entrez, Medline, etc.
+
+# --------------------------------------------------------------
+# Vector‑store / Chroma DB
+# --------------------------------------------------------------
+chromadb==1.0.15               # the actual DB engine used by LangChain‑Chroma
+
+# --------------------------------------------------------------
+# Geocoding / NLP
+# --------------------------------------------------------------
+geopy==2.4.1
+spacy==3.8.7
+# After installing spacy, download the small English model once:
+#   python -m spacy download en_core_web_sm
+
+# --------------------------------------------------------------
+# Data handling / misc
+# --------------------------------------------------------------
+pandas==2.3.1
+numpy==2.3.2                 # pulled in by pandas & torch, listed for clarity
+
+# --------------------------------------------------------------
+# Configuration helpers (optional)
+# --------------------------------------------------------------
+python-dotenv           # load API keys from a .env file
+
+# --------------------------------------------------------------
+# Pydantic (already a dependency of langchain, but pinned for safety)
+# --------------------------------------------------------------
+pydantic==2.11.7
+
+# --------------------------------------------------------------
+# Pytest (for module testing)
+# --------------------------------------------------------------
+pytest
