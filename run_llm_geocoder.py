@@ -114,8 +114,8 @@ prompt_template = PromptTemplate(
 # ----------------------------------------------------------------------
 # CONFIGURATION
 # ----------------------------------------------------------------------
-BATCH_SIZE = 1
-MAX_DOCS = 1
+BATCH_SIZE = 5
+MAX_DOCS = 10
 
 
 def make_loader(cumulative_target: int) -> RobustPubMedLoader:
@@ -210,8 +210,17 @@ async def main(llm) -> None:
             logging.info(f"Batch {batch_index} produced no rows – continuing.")
             continue
 
-        processed_data["pmids"].update(r["pmid"] for r in rows if "pmid" in r)
-        processed_data["results"].extend(rows)
+        #processed_data["pmids"].update(r["pmid"] for r in rows if "pmid" in r)
+        #processed_data["results"].extend(rows)
+        #save_processed_data(processed_data)
+
+        for doc in new_docs:
+            processed_data["pmids"].add(doc.metadata["pmid"])  # Mark ALL as processed
+
+        # Then only add rows that have data:
+        if rows:
+            processed_data["results"].extend(rows)
+
         save_processed_data(processed_data)
 
         total_processed = len(processed_data["pmids"])
