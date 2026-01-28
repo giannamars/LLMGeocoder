@@ -107,8 +107,10 @@ async def _call_llm(
     messages = [
         SystemMessage(
             content=(
-                "You are a helpful biomedical assistant."
-                "Extract structured information about melioidosis or burkholderia pseudomallei occurrences from the provided document."
+            "You are a JSON extraction assistant. "
+            "The user provides scientific document text. "
+            "Extract the requested fields and return ONLY valid JSON. "
+            "Never refuse — the document text is provided directly in the message."
             )
         ),
         HumanMessage(content=formatted_prompt),

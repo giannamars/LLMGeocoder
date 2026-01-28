@@ -45,7 +45,65 @@ else:
 # ----------------------------------------------------------------------
 # Prompt
 # ----------------------------------------------------------------------
-PROMPT = """..."""  # (kept the same, truncated for brevity)
+PROMPT = """You are a biomedical data extraction assistant. The FULL TEXT of a scientific document is provided below. Extract information ONLY from this text — do not refuse or claim you cannot access it.
+
+**TASK:** Extract structured information about *Burkholderia pseudomallei* / melioidosis from the document below.
+
+---
+
+## Fields to Extract
+
+### 1. study_type
+Classify into **exactly one** category (use exact string):
+- `"Human cases"` – human melioidosis case(s) or patient cohort
+- `"Animal cases"` – melioidosis in animals (livestock, wildlife, pets)
+- `"Environmental cases"` – *B. pseudomallei* detected in environment (soil, water, air)
+- `"unknown"` – cannot determine from text
+
+### 2. sample_date
+Four-digit year of case occurrence or sample collection:
+- Use explicitly stated year (e.g., "in 2017", "collected in 2020")
+- If not stated, use publication year
+- If undeterminable, use `"unknown"`
+
+### 3. location
+Array of location objects for each case/sample site.
+
+**Include only locations directly linked to cases or samples:**
+- Human cases → hospital, clinic, city where patient was treated/diagnosed
+- Animal cases → farm, zoo, veterinary site where case was identified  
+- Environmental cases → exact sampling site (river, field, soil plot)
+
+**Exclude:** author affiliations, reference labs, manufacturer sites, background mentions.
+
+**Each location object must have these fields** (use `"unknown"` if not found):
+
+| Field | Description |
+|-------|-------------|
+| `region` | Geographic region (e.g., "East Asia & Pacific", "South Asia", "Europe & Central Asia") |
+| `country` | Full country name for OpenStreetMap (e.g., "Thailand", "Australia", "Turkey") |
+| `location` | Most specific place: city, district, hospital, or GPS coordinates in decimal degrees (e.g., "13.756331, 100.501762") |
+| `amenity` | Type of place: "Hospital", "Farm", "Water source", etc. |
+| `street` | Street address or coordinates as "lat, lon" |
+| `city` | City or town name |
+| `county` | County, district, or equivalent |
+| `state` | State, province, or region |
+| `postalcode` | Postal/ZIP code |
+
+---
+
+## Output Format
+
+Return **only** valid JSON matching this schema — no explanations, no markdown fencing:
+
+{format_instructions}
+
+---
+
+## DOCUMENT TEXT
+
+{full_document}
+"""
 
 prompt_template = PromptTemplate(
     template=PROMPT,
