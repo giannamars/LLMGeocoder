@@ -63,14 +63,12 @@ class State(TypedDict, total=False):
 
 
 class StudyInfo(BaseModel):
-    """The top-level JSON object that the LLM must return."""
-    
     study_type: str = Field(
         description='One of "Human cases", "Animal cases", "Environmental cases", "Excluded", or "unknown"'
     )
     sample_date: str = Field(description="Four-digit year of occurrence, or 'unknown'")
     location: List[LocationInfo] = Field(
-        description="One or more occurrence objects (region, country, location)"
+        description="One or more occurrence objects"
     )
 
     @validator("study_type")
@@ -80,12 +78,26 @@ class StudyInfo(BaseModel):
             raise ValueError(f'study_type must be one of {allowed}; got "{v}"')
         return v
 
-    @validator("sample_date")
-    def _check_year(cls, v: str) -> str:
-        if v == "unknown":
-            return v
+    @validator("sample_date", pre=True)
+    def _normalize_sample_date(cls, v) -> str:
+        """Normalize empty/null values to 'unknown', validate year format."""
+        # Handle empty, null, or whitespace
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "unknown"
+        
+        v = str(v).strip()
+        
+        if v.lower() == "unknown":
+            return "unknown"
+        
+        # Check for valid 4-digit year
         if not re.fullmatch(r"\d{4}", v):
-            raise ValueError(f'sample_date must be a four-digit year or "unknown"; got "{v}"')
+            # Try to extract a year from the string
+            match = re.search(r"\b(19|20)\d{2}\b", v)
+            if match:
+                return match.group(0)
+            return "unknown"
+        
         return v
 
 
