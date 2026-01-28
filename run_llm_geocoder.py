@@ -51,38 +51,67 @@ PROMPT = """You are a biomedical data extraction assistant. The FULL TEXT of a s
 
 ---
 
+## IMPORTANT: Eligibility Criteria
+
+**INCLUDE only these study types:**
+- **Natural human infections** – clinical case reports, outbreak investigations, hospital cohorts
+- **Natural animal infections** – melioidosis in livestock, wildlife, or pets occurring naturally (not experimentally induced)
+- **Environmental detections** – *B. pseudomallei* isolated from soil, water, or environmental samples in field studies
+
+**EXCLUDE (mark as study_type = "Excluded"):**
+- Laboratory experiments using animal models (e.g., "BALB/c mice", "mouse model", "experimental infection")
+- In vitro studies (cell cultures, petri dish experiments)
+- Vaccine development or drug efficacy trials in lab animals
+- Genomic/bioinformatic analyses without field sampling
+- Review articles, meta-analyses, or commentaries without original case data
+
+**How to identify lab studies:**
+- Mentions of lab animal strains: BALB/c, C57BL/6, CD-1 mice, Sprague-Dawley rats
+- Phrases like: "experimentally infected", "challenge study", "animal model", "inoculated with"
+- Institutional lab locations without field cases (e.g., "Porton Down", "BSL-3 facility")
+
+---
+
 ## Fields to Extract
 
 ### 1. study_type
 Classify into **exactly one** category (use exact string):
-- `"Human cases"` – human melioidosis case(s) or patient cohort
-- `"Animal cases"` – melioidosis in animals (livestock, wildlife, pets)
-- `"Environmental cases"` – *B. pseudomallei* detected in environment (soil, water, air)
+- `"Human cases"` – natural human melioidosis case(s) or outbreak
+- `"Animal cases"` – natural melioidosis in animals (NOT lab experiments)
+- `"Environmental cases"` – *B. pseudomallei* detected in environmental field samples
+- `"Excluded"` – lab study, experimental infection, review, or otherwise ineligible
 - `"unknown"` – cannot determine from text
 
 ### 2. sample_date
+*Skip if study_type is "Excluded".*
+
 Four-digit year of case occurrence or sample collection:
 - Use explicitly stated year (e.g., "in 2017", "collected in 2020")
 - If not stated, use publication year
 - If undeterminable, use `"unknown"`
 
 ### 3. location
-Array of location objects for each case/sample site.
+*Return empty array `[]` if study_type is "Excluded".*
 
-**Include only locations directly linked to cases or samples:**
-- Human cases → hospital, clinic, city where patient was treated/diagnosed
-- Animal cases → farm, zoo, veterinary site where case was identified  
-- Environmental cases → exact sampling site (river, field, soil plot)
+Array of location objects for each natural case/sample site.
 
-**Exclude:** author affiliations, reference labs, manufacturer sites, background mentions.
+**Include only locations of natural occurrences:**
+- Human cases → hospital, clinic, city where patient was treated (natural infection)
+- Animal cases → farm, zoo, wildlife area where natural infection occurred
+- Environmental cases → field sampling site (river, soil plot, rice paddy)
+
+**Exclude:**
+- Laboratory locations (research institutes, BSL facilities, animal facilities)
+- Author affiliations
+- Manufacturer sites
 
 **Each location object must have these fields** (use `"unknown"` if not found):
 
 | Field | Description |
 |-------|-------------|
-| `region` | Geographic region (e.g., "East Asia & Pacific", "South Asia", "Europe & Central Asia") |
-| `country` | Full country name for OpenStreetMap (e.g., "Thailand", "Australia", "Turkey") |
-| `location` | Most specific place: city, district, hospital, or GPS coordinates in decimal degrees (e.g., "13.756331, 100.501762") |
+| `region` | Geographic region (e.g., "East Asia & Pacific", "South Asia") |
+| `country` | Full country name for OpenStreetMap (e.g., "Thailand", "Australia") |
+| `location` | Most specific place: city, district, hospital, or GPS coordinates |
 | `amenity` | Type of place: "Hospital", "Farm", "Water source", etc. |
 | `street` | Street address or coordinates as "lat, lon" |
 | `city` | City or town name |
@@ -139,6 +168,11 @@ async def process_one_doc(doc, graph) -> List[Dict[str, Any]]:
 
     out = await graph.ainvoke(state)
     answer = out.get("answer", {})
+    # Skip excluded studies
+    if answer.get("study_type") == "Excluded":
+        logging.info(f"PMID {pmid}: Excluded (lab study or ineligible)")
+        return []  # No rows for this document
+    
     accession_list = out.get("accession_numbers", [])
 
     base_result = {

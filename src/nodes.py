@@ -66,7 +66,7 @@ class StudyInfo(BaseModel):
     """The top-level JSON object that the LLM must return."""
     
     study_type: str = Field(
-        description='One of "Human cases", "Animal cases", "Environmental cases", or "unknown"'
+        description='One of "Human cases", "Animal cases", "Environmental cases", "Excluded", or "unknown"'
     )
     sample_date: str = Field(description="Four-digit year of occurrence, or 'unknown'")
     location: List[LocationInfo] = Field(
@@ -75,7 +75,7 @@ class StudyInfo(BaseModel):
 
     @validator("study_type")
     def _check_study_type(cls, v: str) -> str:
-        allowed = {"Human cases", "Animal cases", "Environmental cases", "unknown"}
+        allowed = {"Human cases", "Animal cases", "Environmental cases", "Excluded", "unknown"}
         if v not in allowed:
             raise ValueError(f'study_type must be one of {allowed}; got "{v}"')
         return v
