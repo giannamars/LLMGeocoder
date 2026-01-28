@@ -175,11 +175,11 @@ async def retrieve_em(
         return new_state
 
     # Short-text shortcut
-    if len(full_text) <= 2_000:
+    if len(full_text) <= 6_000:
         text_for_llm = full_text
     else:
         # Long-text path – use vector store
-        excerpt = retrieve_top_chunks(pmid, top_k=3)
+        excerpt = retrieve_top_chunks(pmid, top_k=5)
 
         if excerpt is None:
             logging.info(f"Building vector store for PMID {pmid} (first use).")
