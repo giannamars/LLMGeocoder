@@ -230,17 +230,26 @@ def explode_locations(record: Dict[str, Any]) -> List[Dict[str, Any]]:
     exploded: List[Dict[str, Any]] = []
 
     for loc in locations:
-        new_rec = record.copy()
-        new_rec["region"] = loc.get("region", "unknown")
-        new_rec["country"] = loc.get("country", "unknown")
-        new_rec["location_name"] = loc.get("location", "unknown")
-        new_rec["amenity"] = loc.get("amenity", "unknown")
-        new_rec["street"] = loc.get("street", "unknown")
-        new_rec["city"] = loc.get("city", "unknown")
-        new_rec["county"] = loc.get("county", "unknown")
-        new_rec["state"] = loc.get("state", "unknown")
-        new_rec["postalcode"] = loc.get("postalcode", "unknown")
-        new_rec["accession_numbers"] = accession_list
+        # IMPORTANT: Use deep copy to avoid shared references
+        new_rec = {
+            "pmid": record.get("pmid"),
+            "title": record.get("title"),
+            "study_type": record.get("study_type"),
+            "sample_date": record.get("sample_date"),
+            "source": record.get("source"),
+            "retrieved_preview": record.get("retrieved_preview"),
+            "region": loc.get("region", "unknown"),
+            "country": loc.get("country", "unknown"),
+            "location_name": loc.get("location", "unknown"),
+            "amenity": loc.get("amenity", "unknown"),
+            "street": loc.get("street", "unknown"),
+            "city": loc.get("city", "unknown"),
+            "county": loc.get("county", "unknown"),
+            "state": loc.get("state", "unknown"),
+            "postalcode": loc.get("postalcode", "unknown"),
+            "accession_numbers": accession_list,
+            "location": record.get("location"),  # Keep original for reference
+        }
         exploded.append(new_rec)
 
     return exploded
@@ -276,6 +285,8 @@ MAX_ROWS_PER_PMID: Optional[int] = None
 
 def dedupe_and_limit_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Remove duplicate locations per PMID and optionally limit row count."""
+    logging.info(f"Dedupe input: {len(rows)} rows")
+
     grouped: Dict[str, List[Dict[str, Any]]] = {}
     for r in rows:
         pmid = r["pmid"]
@@ -288,10 +299,11 @@ def dedupe_and_limit_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         uniq: List[Dict[str, Any]] = []
 
         for row in pmid_rows:
+            # Use location_name (the exploded field), NOT location (the original list)
             key = (
                 str(row.get("region", "unknown")),
                 str(row.get("country", "unknown")),
-                str(row.get("location", "unknown")),
+                str(row.get("location_name", "unknown")),  # ← FIXED: use location_name
             )
             if key not in seen:
                 seen.add(key)
@@ -301,5 +313,6 @@ def dedupe_and_limit_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             uniq = uniq[:MAX_ROWS_PER_PMID]
 
         cleaned.extend(uniq)
+    logging.info(f"Dedupe output: {len(cleaned)} rows")
 
     return cleaned

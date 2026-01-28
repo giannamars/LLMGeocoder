@@ -1,154 +1,46 @@
 {
-  "South Asia, India, Vardhman Mahavir Medical College and Safdarjung Hospital": [
+  "Sarawak General Hospital, Kuching, Sarawak, Malaysia": [
+    1.5430052,
+    110.3396604
+  ],
+  "Miri Hospital, Miri, Sarawak, Malaysia": [
+    4.3763923,
+    114.0025618
+  ],
+  "Bintulu Hospital, Bintulu, Sarawak, Malaysia": [
+    3.230022,
+    113.100403
+  ],
+  "Borneo Medical Centre, Kuching, Sarawak, Malaysia": [
+    1.5292221,
+    110.3576156
+  ],
+  "Vinmec International Hospital, Ho Chi Minh City, Vietnam": [
     null,
     null
   ],
-  "South Asia, India, Vardhman Mahavir Medical College and Safdarjung": [
+  "Vinmec International Hospital, Vietnam": [
+    21.0079133,
+    105.7471695
+  ],
+  "Vardhman Mahavir Medical College and Safdarjung Hospital, Delhi, Delhi, India": [
     null,
     null
   ],
-  "South Asia, India, Vardhman Mahavir Medical College and": [
+  "Vardhman Mahavir Medical College and Safdarjung Hospital, Delhi, India": [
     null,
     null
   ],
-  "South Asia, India, Vardhman Mahavir Medical College": [
+  "Vardhman Mahavir Medical College and Safdarjung Hospital, India": [
     null,
     null
-  ],
-  "South Asia, India, Vardhman Mahavir Medical": [
-    null,
-    null
-  ],
-  "South Asia, India, Vardhman Mahavir": [
-    null,
-    null
-  ],
-  "South Asia, India, Vardhman": [
-    null,
-    null
-  ],
-  "South Asia, India": [
-    21.4117746,
-    39.889743
-  ],
-  "West Africa, Nigeria, Osogbo": [
-    null,
-    null
-  ],
-  "West Africa, Nigeria": [
-    9.042019,
-    7.5251345
-  ],
-  "East Asia & Pacific, Australia, unknown": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Australia": [
-    null,
-    null
-  ],
-  "Australia": [
-    -24.7761086,
-    134.755
-  ],
-  "East Asia & Pacific, Thailand, Northeast Thailand": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Thailand, Northeast": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Thailand": [
-    null,
-    null
-  ],
-  "Thailand": [
-    14.8971921,
-    100.83273
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam": [
-    null,
-    null
-  ],
-  "Vietnam": [
-    15.9266657,
-    107.9650855
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital, Ho Chi Minh City": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital, Ho Chi Minh": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital, Ho Chi": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital, Ho": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Vietnam, Vinmec International Hospital,": [
-    null,
-    null
-  ],
-  "South Asia, India, unknown": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Australia, Far North Queensland": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Australia, Far North": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Australia, Far": [
-    null,
-    null
-  ],
-  "East Asia & Pacific, Thailand, Thailand": [
-    null,
-    null
-  ],
-  "Ho Chi Minh City, Ho Chi Minh City, Vietnam": [
-    10.7793648,
-    106.6922806
-  ],
-  "India": [
-    22.3511148,
-    78.6677428
-  ],
-  "Queensland, Australia": [
-    -22.1646782,
-    144.5844903
   ],
   "Delhi, Delhi, India": [
     28.6138954,
     77.2090057
   ],
-  "Kota, Rajasthan, India": [
-    25.1737019,
-    75.8574194
-  ],
-  "Northeast Thailand, Thailand": [
-    16.8330688,
-    102.8434926
+  "Osogbo, Osogbo, Osun State, Nigeria": [
+    7.7551115,
+    4.5506394
   ]
 }

@@ -143,8 +143,8 @@ prompt_template = PromptTemplate(
 # ----------------------------------------------------------------------
 # CONFIGURATION
 # ----------------------------------------------------------------------
-BATCH_SIZE = 5
-MAX_DOCS = 10
+BATCH_SIZE = 1
+MAX_DOCS = 1
 
 
 def make_loader(cumulative_target: int) -> RobustPubMedLoader:
@@ -238,6 +238,8 @@ async def main(llm) -> None:
             rows.extend(res)
 
         rows = await enrich_geocode(rows)
+        logging.info(f"After geocoding, first row has lat={rows[0].get('latitude') if rows else 'N/A'}")
+
         rows = dedupe_and_limit_rows(rows)
 
         if not rows:

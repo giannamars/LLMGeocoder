@@ -37,8 +37,8 @@ def _save_cache() -> None:
 # ----------------------------------------------------------------------
 def build_geocode_candidates(row: Dict[str, Any]) -> List[str]:
     """
-    Return query strings ordered from most specific → least specific,
-    using all available location fields.
+    Return query strings ordered from most specific → least specific.
+    Prioritizes location_name (e.g., hospital name) for better matching.
     """
     # Extract all location fields
     region = row.get("region", "").strip()
@@ -70,43 +70,64 @@ def build_geocode_candidates(row: Dict[str, Any]) -> List[str]:
 
     candidates: List[str] = []
 
-    # 1. Most specific: street + city + state + country
-    candidates.append(_join([street, city, state, country]))
+    # 1. Location name + city + state + country (most specific for hospitals)
+    #    e.g., "Bintulu Hospital, Bintulu, Sarawak, Malaysia"
+    candidates.append(_join([location_name, city, state, country]))
 
-    # 2. Amenity + city + country (e.g., "Vinmec International Hospital, Ho Chi Minh City, Vietnam")
-    candidates.append(_join([amenity, location_name, city, country]))
-
-    # 3. Location name + city + country
+    # 2. Location name + city + country
+    #    e.g., "Bintulu Hospital, Bintulu, Malaysia"
     candidates.append(_join([location_name, city, country]))
 
-    # 4. Location name + country
+    # 3. Location name + state + country
+    #    e.g., "Bintulu Hospital, Sarawak, Malaysia"
+    candidates.append(_join([location_name, state, country]))
+
+    # 4. Location name + country only
+    #    e.g., "Bintulu Hospital, Malaysia"
     candidates.append(_join([location_name, country]))
 
-    # 5. City + state + country
+    # 5. City + state + country (fallback to city level)
+    #    e.g., "Bintulu, Sarawak, Malaysia"
     candidates.append(_join([city, state, country]))
 
     # 6. City + country
+    #    e.g., "Bintulu, Malaysia"
     candidates.append(_join([city, country]))
 
-    # 7. County + state + country
-    candidates.append(_join([county, state, country]))
+    # 7. Street address if available
+    if street:
+        candidates.append(_join([street, city, state, country]))
 
-    # 8. State + country
-    candidates.append(_join([state, country]))
-
-    # 9. Postalcode + country (if available)
+    # 8. Postalcode + country
     if postalcode:
         candidates.append(_join([postalcode, country]))
 
-    # 10. Country only
-    candidates.append(country)
+    # 9. State + country
+    candidates.append(_join([state, country]))
 
-    # 11. Original format with region (fallback)
-    candidates.append(_join([region, country, location_name]))
+    # 10. Country only (last resort)
+    candidates.append(country)
 
     # Deduplicate while preserving order
     seen = set()
     return [q for q in candidates if q and not (q in seen or seen.add(q))]
+
+async def _geocode_with_fallback(
+    row: Dict[str, Any]
+) -> Tuple[Optional[float], Optional[float], str]:
+    """Try most-specific query first, then progressively less-specific."""
+    candidates = build_geocode_candidates(row)
+    
+    logging.debug(f"Geocode candidates for {row.get('location_name')}: {candidates[:5]}")
+
+    for query in candidates:
+        lat, lon, success = await _geocode_async(query)
+        logging.debug(f"  Tried '{query}' → {'✓' if success else '✗'}")
+        if success:
+            return lat, lon, query
+
+    return None, None, "not_found"
+
 # ----------------------------------------------------------------------
 # Core blocking geocode function
 # ----------------------------------------------------------------------
