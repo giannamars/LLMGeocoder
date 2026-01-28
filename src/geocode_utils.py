@@ -36,9 +36,7 @@ def _save_cache() -> None:
 # Query candidate builder
 # ----------------------------------------------------------------------
 def build_geocode_candidates(row: Dict[str, Any]) -> List[str]:
-    """
-    Return query strings ordered from most specific → least specific.
-    """
+    """Return query strings ordered from most specific → least specific."""
     region = row.get("region", "").strip()
     country = row.get("country", "").strip()
     loc = row.get("location_name", "").strip()
@@ -72,27 +70,27 @@ def build_geocode_candidates(row: Dict[str, Any]) -> List[str]:
 # ----------------------------------------------------------------------
 # Core blocking geocode function
 # ----------------------------------------------------------------------
-def _geocode_one(query: str) -> Tuple[Optional[float], Optional[float], str]:
+def _geocode_one(query: str) -> Tuple[Optional[float], Optional[float], bool]:
     """
-    Returns (lat, lon, status). Status is "ok", "not_found", or "error".
+    Returns (lat, lon, success). success is True if found, False otherwise.
     """
     if query in _CACHE:
         lat, lon = _CACHE[query]
-        return lat, lon, "ok" if lat is not None else "not_found"
+        return lat, lon, lat is not None
 
     try:
         location: Optional[GeoLocation] = geolocator.geocode(query)
         if location is None:
             _CACHE[query] = (None, None)
-            return None, None, "not_found"
+            return None, None, False
 
         lat, lon = location.latitude, location.longitude
         _CACHE[query] = (lat, lon)
-        return lat, lon, "ok"
+        return lat, lon, True
 
     except (GeocoderTimedOut, GeocoderServiceError) as exc:
         logging.warning(f"Nominatim error for '{query}': {exc}")
-        return None, None, "error"
+        return None, None, False
 
 
 # ----------------------------------------------------------------------
@@ -101,7 +99,7 @@ def _geocode_one(query: str) -> Tuple[Optional[float], Optional[float], str]:
 _executor = ThreadPoolExecutor(max_workers=4)
 
 
-async def _geocode_async(query: str) -> Tuple[Optional[float], Optional[float], str]:
+async def _geocode_async(query: str) -> Tuple[Optional[float], Optional[float], bool]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(_executor, _geocode_one, query)
 
@@ -112,13 +110,17 @@ async def _geocode_async(query: str) -> Tuple[Optional[float], Optional[float], 
 async def _geocode_with_fallback(
     row: Dict[str, Any]
 ) -> Tuple[Optional[float], Optional[float], str]:
-    """Try most-specific query first, then progressively less-specific."""
+    """
+    Try most-specific query first, then progressively less-specific.
+    Returns (lat, lon, matched_query) where matched_query is the successful
+    query string or "not_found".
+    """
     candidates = build_geocode_candidates(row)
 
     for query in candidates:
-        lat, lon, status = await _geocode_async(query)
-        if status == "ok":
-            return lat, lon, "ok"
+        lat, lon, success = await _geocode_async(query)
+        if success:
+            return lat, lon, query  # Return the successful query string
 
     return None, None, "not_found"
 
@@ -144,14 +146,15 @@ async def add_geocode_columns(
     pause: float = 1.0,
 ) -> List[Dict[str, Any]]:
     """
-    Enrich each row with latitude, longitude, and geocode_status.
+    Enrich each row with latitude, longitude, and geocode_query.
+    geocode_query contains the successful query string or "not_found"/"skipped".
     """
     enriched: List[Dict[str, Any]] = []
 
     for row in rows:
         # Fast-path: all fields are "unknown"
         if _is_all_unknown(row):
-            row.update(latitude=None, longitude=None, geocode_status="not_found")
+            row.update(latitude=None, longitude=None, geocode_query="not_found")
             enriched.append(row)
             continue
 
@@ -160,17 +163,17 @@ async def add_geocode_columns(
         location_name = row.get("location_name")
 
         if not country or not location_name:
-            row.update(latitude=None, longitude=None, geocode_status="not_found")
+            row.update(latitude=None, longitude=None, geocode_query="not_found")
             enriched.append(row)
             continue
 
         # Geocode with fallback
-        lat, lon, status = await _geocode_with_fallback(row)
+        lat, lon, matched_query = await _geocode_with_fallback(row)
 
         if pause:
             await asyncio.sleep(pause)
 
-        row.update(latitude=lat, longitude=lon, geocode_status=status)
+        row.update(latitude=lat, longitude=lon, geocode_query=matched_query)
         enriched.append(row)
 
     _save_cache()
@@ -181,11 +184,9 @@ async def add_geocode_columns(
 # No-op geocode (when GEOCODE=False)
 # ----------------------------------------------------------------------
 async def noop_geocode(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Identity coroutine - returns rows with placeholder geocode columns.
-    """
+    """Identity coroutine - returns rows with placeholder geocode columns."""
     for row in rows:
         row.setdefault("latitude", None)
         row.setdefault("longitude", None)
-        row.setdefault("geocode_status", "skipped")
+        row.setdefault("geocode_query", "skipped")
     return rows

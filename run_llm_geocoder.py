@@ -34,7 +34,7 @@ logging.basicConfig(
 # ----------------------------------------------------------------------
 # Toggle geocoding on/off
 # ----------------------------------------------------------------------
-GEOCODE = False
+GEOCODE = True
 
 if GEOCODE:
     from geocode_utils import add_geocode_columns as enrich_geocode
