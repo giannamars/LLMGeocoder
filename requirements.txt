@@ -5,6 +5,8 @@ langchain==0.3.26
 langchain-chroma==0.2.4      # vector‑store integration (uses ChromaDB under the hood)
 langchain-huggingface==0.3.0  # HuggingFace embeddings wrapper
 langchain-openai==0.3.5      # OpenAI LLM wrapper
+# langgraph for building LLM‑driven graphs
+langgraph==0.1.14
 
 # --------------------------------------------------------------
 # Embedding / model back‑ends

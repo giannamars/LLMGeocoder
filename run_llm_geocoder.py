@@ -19,8 +19,8 @@ from langchain.prompts import PromptTemplate
 from config import PROCESSED_PMIDS_FILE
 from cborg_loader import init_cborg_chat_model
 from pubmed_loader import RobustPubMedLoader
-from src.llm_graph import build_llm_graph
-from src.llm_nodes import parser as output_parser  # renamed to avoid collision
+from graph import build_llm_graph
+from nodes import parser as output_parser  # renamed to avoid collision
 from utils import explode_locations, load_processed_data, save_processed_data, dedupe_and_limit_rows
 
 load_dotenv()
