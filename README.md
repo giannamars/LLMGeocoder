@@ -21,4 +21,4 @@ LLMGeocoder automates the systematic review process by:
 | 🧬 | **Comprehensive Accession Extraction** | Supports NCBI, ENA, DDBJ, UniProt, GISAID, and more |
 | 📄 | **Full-text Support** | Retrieves PMC full-text when available, falls back to abstracts |
 | 🔄 | **Resumable** | Persists progress to pickle files for interrupted runs |
-| ⚡ | **Async Processing** | Concurrent processing with rate limiting for API compliance |
+| ⚡ | **Async Processing** | Concurrent processing with rate limiting for CBORG API compliance |
