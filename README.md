@@ -1,6 +1,6 @@
 # LLMGeocoder
 
-A Python pipeline for extracting structured geographic and metadata information from PubMed literature on *Burkholderia pseudomallei* and melioidosis using Large Language Models.
+A Python pipeline for extracting structured geographic and metadata information from PubMed literature using Large Language Models.
 
 ## Overview
 
